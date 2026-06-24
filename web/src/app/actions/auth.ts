@@ -2,7 +2,7 @@
 'use server'
 
 import { cookies } from 'next/headers';
-import { fetchAPI } from '@/lib/api';
+import { fetchAPI } from '@/app/lib/api';
 import { redirect } from 'next/navigation';
 
 export async function loginAction(prevState: any, formData: FormData) {
