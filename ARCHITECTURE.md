@@ -162,3 +162,12 @@ Why RBAC?
 * Fine-grained permissions
 * Clear separation of responsibilities
 * Supports future growth of teams and projects
+
+
+
+
+# Architecture Notes
+
+## Expo Go limitation
+
+Push notification registration is commented out in `App.tsx` for the Expo Go assessment workaround. The client can run without a push-delivery backend, but notification registration should be restored when building a standalone app or a custom dev client.
