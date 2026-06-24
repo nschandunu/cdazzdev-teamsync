@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionsFilter } from './common/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,6 +32,7 @@ async function bootstrap() {
 
   // 4. Enable CORS so your Next.js web app can actually talk to this API
   app.enableCors();
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   await app.listen(process.env.API_PORT ?? 3000);
   console.log(`🚀 API is running on: http://localhost:${process.env.API_PORT ?? 3000}/api/docs`);
