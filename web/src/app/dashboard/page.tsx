@@ -1,15 +1,18 @@
 import { fetchServerAPI } from '@/app/lib/api-server';
 import Link from 'next/link';
 import KanbanBoard from '@/components/KanbanBoard';
+import TaskModal from '@/components/TaskModal';
 import { logoutAction } from '../actions/auth';
 
 // Next.js 15 requires awaiting searchParams
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ projectId?: string }>;
+  searchParams: Promise<{ projectId?: string; taskId?: string }>;
 }) {
   const resolvedParams = await searchParams;
+  const activeProjectIdFromUrl = resolvedParams.projectId;
+  const activeTaskId = resolvedParams.taskId;
   
   // 1. Fetch all projects the user belongs to
   let projects = [];
@@ -20,7 +23,7 @@ export default async function DashboardPage({
   }
 
   // 2. Determine the active project (default to the first one if none selected)
-  const activeProjectId = resolvedParams.projectId || (projects.length > 0 ? projects[0].id : null);
+  const activeProjectId = activeProjectIdFromUrl || (projects.length > 0 ? projects[0].id : null);
   const activeProject = projects.find((p: any) => p.id === activeProjectId);
 
   // 3. Fetch tasks for the active project
@@ -32,6 +35,16 @@ export default async function DashboardPage({
       tasks = response.data || [];
     } catch (error) {
       console.error("Failed to fetch tasks", error);
+    }
+  }
+
+  let activeTaskDetails = null;
+  if (activeTaskId) {
+    try {
+      // Fetches the specific task including comments and assignee
+      activeTaskDetails = await fetchServerAPI(`/tasks/${activeTaskId}`);
+    } catch (error) {
+      console.error("Failed to fetch task details", error);
     }
   }
 
@@ -77,7 +90,7 @@ export default async function DashboardPage({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Header */}
         <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-8 shrink-0">
           <div>
@@ -99,6 +112,10 @@ export default async function DashboardPage({
             </div>
           )}
         </div>
+
+        {activeTaskDetails && activeProjectId && (
+          <TaskModal task={activeTaskDetails} projectId={activeProjectId} />
+        )}
       </main>
 
     </div>

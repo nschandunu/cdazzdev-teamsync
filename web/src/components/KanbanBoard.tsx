@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 const priorityColors = {
   LOW: 'bg-neutral-100 text-neutral-600',
@@ -31,9 +32,10 @@ export default function KanbanBoard({ tasks }: { tasks: any[] }) {
           {/* Task List */}
           <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
             {columnTasks.map((task) => (
-              <div 
+              <Link
                 key={task.id} 
-                className="bg-white p-4 rounded-card shadow-sm border border-neutral-200 cursor-pointer hover:border-primary transition-colors group"
+                href={`/dashboard?projectId=${task.projectId}&taskId=${task.id}`}
+                className="block bg-white p-4 rounded-card shadow-sm border border-neutral-200 cursor-pointer hover:border-primary transition-colors group"
               >
                 <div className="flex justify-between items-start mb-2">
                   <span className={`text-[11px] font-bold px-2 py-1 uppercase tracking-wider rounded-input ${priorityColors[task.priority as keyof typeof priorityColors]}`}>
@@ -55,7 +57,7 @@ export default function KanbanBoard({ tasks }: { tasks: any[] }) {
                     {new Date(task.dueDate).toLocaleDateString()}
                   </p>
                 )}
-              </div>
+              </Link>
             ))}
             
             {columnTasks.length === 0 && (
