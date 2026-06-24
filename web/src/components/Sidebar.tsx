@@ -39,7 +39,13 @@ export default function Sidebar({ projects, activeProjectId }: { projects: any[]
         </div>
         
         <div className="flex-1 overflow-y-auto py-6 px-4">
-          <h2 className="text-caption font-semibold text-neutral-400 uppercase tracking-wider mb-4 px-2">Projects</h2>
+          <div className="flex items-center justify-between mb-4 px-2">
+            <h2 className="text-caption font-semibold text-neutral-400 uppercase tracking-wider">Projects</h2>
+            {/* Only admins/managers should ideally see this, but for UX we show it and API enforces it */}
+            <Link href="?newProject=true" className="text-primary hover:text-primary-dark text-[20px] leading-none" title="Create Project">
+              +
+            </Link>
+          </div>
           <nav className="space-y-1">
             {projects.map((project: any) => (
               <Link
