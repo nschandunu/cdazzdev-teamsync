@@ -32,7 +32,7 @@ export async function createTaskAction(projectId: string, formData: FormData) {
   try {
     await fetchServerAPI(`/projects/${projectId}/tasks`, {
       method: 'POST',
-      body: JSON.stringify({ title, priority, status: 'TODO' }),
+      body: JSON.stringify({ title, priority }),
     });
     // Refresh the board and close the modal by routing back to the base project URL
     revalidatePath('/dashboard');
