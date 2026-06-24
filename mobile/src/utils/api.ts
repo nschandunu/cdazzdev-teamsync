@@ -1,11 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// For Android emulator, localhost is 10.0.2.2. For iOS simulator, it is localhost.
+// CRITICAL: Android emulator uses 10.0.2.2 to access the host machine's localhost
 const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000/api' : 'http://localhost:3000/api';
 
 export async function fetchMobileAPI(endpoint: string, options: RequestInit = {}) {
-  // REQUIREMENT: Securely retrieve the token from the native keychain
+  // REQUIREMENT: Securely retrieve the token from the native Keystore
   const token = await SecureStore.getItemAsync('access_token');
   
   const defaultHeaders: HeadersInit = {
@@ -16,10 +16,7 @@ export async function fetchMobileAPI(endpoint: string, options: RequestInit = {}
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
+    headers: { ...defaultHeaders, ...options.headers },
   });
 
   const data = await response.json().catch(() => null);
