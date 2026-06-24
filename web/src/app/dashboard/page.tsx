@@ -1,8 +1,7 @@
 import { fetchServerAPI } from '@/app/lib/api-server';
-import Link from 'next/link';
 import KanbanBoard from '@/components/KanbanBoard';
+import Sidebar from '@/components/Sidebar';
 import TaskModal from '@/components/TaskModal';
-import { logoutAction } from '../actions/auth';
 
 // Next.js 15 requires awaiting searchParams
 export default async function DashboardPage({
@@ -50,44 +49,7 @@ export default async function DashboardPage({
 
   return (
     <div className="flex h-screen bg-neutral-50 overflow-hidden">
-      
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col hidden tablet:flex">
-        <div className="h-16 flex items-center px-6 border-b border-neutral-200">
-          <h1 className="text-h2 text-primary font-bold tracking-tight">TeamSync</h1>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto py-6 px-4">
-          <h2 className="text-caption font-semibold text-neutral-400 uppercase tracking-wider mb-4 px-2">Projects</h2>
-          <nav className="space-y-1">
-            {projects.map((project: any) => {
-              const isActive = project.id === activeProjectId;
-              return (
-                <Link
-                  key={project.id}
-                  href={`/dashboard?projectId=${project.id}`}
-                  className={`block px-3 py-2 rounded-btn text-body transition-colors ${
-                    isActive 
-                      ? 'bg-primary/10 text-primary font-medium' 
-                      : 'text-neutral-600 hover:bg-neutral-100'
-                  }`}
-                >
-                  {project.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* User Footer / Logout */}
-        <div className="p-4 border-t border-neutral-200">
-          <form action={logoutAction}>
-            <button type="submit" className="w-full text-left px-3 py-2 text-danger hover:bg-danger/10 rounded-btn text-body transition-colors">
-              Sign Out
-            </button>
-          </form>
-        </div>
-      </aside>
+      <Sidebar activeProjectId={activeProjectId} projects={projects} />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">

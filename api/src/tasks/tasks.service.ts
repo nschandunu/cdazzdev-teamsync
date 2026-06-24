@@ -1,7 +1,16 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CreateTaskDto, UpdateTaskDto, FilterTasksDto, CreateCommentDto } from './tasks.dto';
-import { GlobalRole, ProjectRole } from '@prisma/client';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  FilterTasksDto,
+  CreateCommentDto,
+} from './tasks.dto';
+import { GlobalRole, ProjectRole, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -18,7 +27,9 @@ export class TasksService {
   }
 
   async findAllInProject(projectId: string, query: FilterTasksDto) {
-    const { status, priority, assigneeId, page, limit, sortBy } = query;
+    const { status, priority, assigneeId, sortBy } = query;
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
 
     const where = {
@@ -28,14 +39,19 @@ export class TasksService {
       ...(assigneeId && { assigneeId }),
     };
 
-    const orderBy = sortBy ? { [sortBy]: 'asc' } : { createdAt: 'desc' };
+    const orderBy: Prisma.TaskOrderByWithRelationInput = sortBy
+      ? { [sortBy]: 'asc' }
+      : { createdAt: 'desc' };
 
     const [data, total] = await Promise.all([
       this.prisma.task.findMany({ where, skip, take: limit, orderBy }),
       this.prisma.task.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string) {
@@ -43,14 +59,22 @@ export class TasksService {
       where: { id },
       include: {
         assignee: { select: { id: true, name: true } },
-        comments: { include: { author: { select: { id: true, name: true } } }, orderBy: { createdAt: 'asc' } },
+        comments: {
+          include: { author: { select: { id: true, name: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
     if (!task) throw new NotFoundException('Task not found');
     return task;
   }
 
-  async update(id: string, dto: UpdateTaskDto, userId: string, userRole: GlobalRole) {
+  async update(
+    id: string,
+    dto: UpdateTaskDto,
+    userId: string,
+    userRole: GlobalRole,
+  ) {
     const task = await this.prisma.task.findUnique({
       where: { id },
       include: { project: { include: { members: true } } },
@@ -65,7 +89,9 @@ export class TasksService {
     );
 
     if (!isAssignee && !isAdmin && !isProjectManager) {
-      throw new ForbiddenException('You do not have permission to update this task');
+      throw new ForbiddenException(
+        'You do not have permission to update this task',
+      );
     }
 
     return this.prisma.task.update({ where: { id }, data: dto });
