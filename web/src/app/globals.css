@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  /* 1. Breakpoints */
+  --breakpoint-mobile: 375px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
+
+  /* 2. Colors */
+  --color-primary: #2563EB;
+  --color-primary-dark: #1E40AF;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+
+  --color-neutral-50: #F9FAFB;
+  --color-neutral-100: #F3F4F6;
+  --color-neutral-200: #E5E7EB;
+  --color-neutral-300: #D1D5DB;
+  --color-neutral-400: #9CA3AF;
+  --color-neutral-500: #6B7280;
+  --color-neutral-600: #4B5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1F2937;
+  --color-neutral-900: #111827;
+
+  /* 3. Border Radius */
+  --radius-card: 8px;
+  --radius-input: 6px;
+  --radius-btn: 6px;
+}
+
+/* 4. Custom Typography Utilities (Figma Spec) */
+@utility text-h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+@utility text-h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+@utility text-body {
+  font-size: 15px;
+  font-weight: 400;
+}
+@utility text-caption {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* 5. Global Base Styles */
+@layer base {
+  body {
+    background-color: var(--color-neutral-50);
+    color: var(--color-neutral-900);
+    /* Font family is handled by next/font in layout.tsx */
+  }
+}
