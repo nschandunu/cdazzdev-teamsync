@@ -10,6 +10,9 @@ out/
 # Expo / React Native
 .expo/
 .expo-shared/
+web-build/
+android/
+ios/
 
 # Environment variables
 .env
@@ -33,6 +36,9 @@ Thumbs.db
 
 # Coverage & testing
 coverage/
+
+# TypeScript
+*.tsbuildinfo
 
 # Prisma
 prisma/dev.db
