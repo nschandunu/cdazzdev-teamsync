@@ -1,12 +1,13 @@
 import { PrismaClient, GlobalRole, ProjectRole, TaskStatus, TaskPriority } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Hardcoded bcrypt hash for "password123"
-  const defaultPassword = '$2b$10$EpRnTzVlqHNP0.fUbXUwSOyuiNb/lNkV3mO/1kG/3...'; 
+  // FIX: Dynamically generate a valid bcrypt hash
+  const defaultPassword = await bcrypt.hash('password123', 10); 
 
   // 1. Create 2 Users
   const manager = await prisma.user.upsert({
