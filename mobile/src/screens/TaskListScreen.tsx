@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Network from 'expo-network';
 import * as SecureStore from 'expo-secure-store';
@@ -8,7 +9,16 @@ import { fetchMobileAPI } from '../utils/api';
 
 const CACHE_KEY = '@tasks_cache';
 
-export default function TaskListScreen({ navigation, setToken }: any) {
+type TaskStackParamList = {
+  Tasks: undefined;
+  TaskDetail: { task: any };
+};
+
+type Props = NativeStackScreenProps<TaskStackParamList, 'Tasks'> & {
+  setToken: React.Dispatch<React.SetStateAction<string | null>>;
+};
+
+export default function TaskListScreen({ navigation, setToken }: Props) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);

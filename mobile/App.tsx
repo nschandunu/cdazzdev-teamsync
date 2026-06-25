@@ -11,7 +11,29 @@ import TaskDetailScreen from './src/screens/TaskDetailScreen';
 
 // Notifications are disabled in Expo Go for this workaround.
 
-const Stack = createNativeStackNavigator();
+type RootStackParamList = {
+  Login: undefined;
+  App: undefined;
+};
+
+type TaskStackParamList = {
+  Tasks: undefined;
+  TaskDetail: { task: any };
+};
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+const TaskStack = createNativeStackNavigator<TaskStackParamList>();
+
+function TaskNavigator({ setToken }: { setToken: React.Dispatch<React.SetStateAction<string | null>> }) {
+  return (
+    <TaskStack.Navigator screenOptions={{ headerShown: false }}>
+      <TaskStack.Screen name="Tasks">
+        {(props) => <TaskListScreen {...props} setToken={setToken} />}
+      </TaskStack.Screen>
+      <TaskStack.Screen name="TaskDetail" component={TaskDetailScreen} />
+    </TaskStack.Navigator>
+  );
+}
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -92,21 +114,17 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
           {userToken == null ? (
-            <Stack.Screen name="Login">
+            <RootStack.Screen name="Login">
               {(props) => <LoginScreen {...props} setToken={setUserToken} />}
-            </Stack.Screen>
+            </RootStack.Screen>
           ) : (
-            // Group our protected screens
-            <Stack.Group>
-              <Stack.Screen name="Tasks">
-                {(props) => <TaskListScreen {...props} setToken={setUserToken} />}
-              </Stack.Screen>
-              <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
-            </Stack.Group>
+            <RootStack.Screen name="App">
+              {() => <TaskNavigator setToken={setUserToken} />}
+            </RootStack.Screen>
           )}
-        </Stack.Navigator>
+        </RootStack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
   );

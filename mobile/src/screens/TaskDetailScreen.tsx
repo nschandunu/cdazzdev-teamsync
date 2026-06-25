@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { fetchMobileAPI } from '../utils/api';
 
-export default function TaskDetailScreen({ route, navigation }: any) {
+type TaskStackParamList = {
+  Tasks: undefined;
+  TaskDetail: { task: any };
+};
+
+type Props = NativeStackScreenProps<TaskStackParamList, 'TaskDetail'>;
+
+export default function TaskDetailScreen({ route, navigation }: Props) {
   // We passed the basic task info from the List screen
   const { task } = route.params;
   
