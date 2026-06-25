@@ -20,9 +20,9 @@ export default function LoginPage() {
         {/* The Form */}
         <form action={formAction} className="space-y-6">
             {/* Error Message */}
-          {state?.error && (
+          {state?.errors?.general && (
             <div className="p-3 bg-danger/10 border border-danger rounded-input text-danger text-caption">
-              {state.error}
+              {state.errors.general}
             </div>
           )}
 
@@ -37,8 +37,11 @@ export default function LoginPage() {
               type="email"
               required
               placeholder="manager@teamsync.com"
-              className="w-full px-4 py-3 rounded-input border border-neutral-300 text-body focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors placeholder:text-neutral-400"
+              className={`w-full px-4 py-3 rounded-input border ${state?.errors?.email ? 'border-danger focus:ring-danger/20 focus:border-danger' : 'border-neutral-300 focus:ring-primary/20 focus:border-primary'} text-body focus:outline-none focus:ring-2 transition-colors placeholder:text-neutral-400`}
             />
+            {state?.errors?.email && (
+              <p className="text-danger text-caption mt-1">{state.errors.email}</p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -52,8 +55,11 @@ export default function LoginPage() {
               type="password"
               required
               placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-input border border-neutral-300 text-body focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors placeholder:text-neutral-400"
+              className={`w-full px-4 py-3 rounded-input border ${state?.errors?.password ? 'border-danger focus:ring-danger/20 focus:border-danger' : 'border-neutral-300 focus:ring-primary/20 focus:border-primary'} text-body focus:outline-none focus:ring-2 transition-colors placeholder:text-neutral-400`}
             />
+            {state?.errors?.password && (
+              <p className="text-danger text-caption mt-1">{state.errors.password}</p>
+            )}
           </div>
 
           {/* Remember Me (Visual only for the assessment requirement) */}

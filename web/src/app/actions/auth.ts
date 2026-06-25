@@ -9,8 +9,20 @@ export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  if (!email || !password) {
-    return { error: 'Email and password are required.' };
+  const errors: { email?: string; password?: string; general?: string } = {};
+
+  if (!email) {
+    errors.email = 'Email is required.';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Invalid email address.';
+  }
+
+  if (!password) {
+    errors.password = 'Password is required.';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { errors };
   }
 
   try {
@@ -36,7 +48,7 @@ export async function loginAction(prevState: any, formData: FormData) {
     // Optionally set refresh token here as well if you have extra time
 
   } catch (error: any) {
-    return { error: error.message || 'Invalid credentials. Please try again.' };
+    return { errors: { general: error.message || 'Invalid credentials. Please try again.' } };
   }
 
   // 3. Redirect to the dashboard on successful login
