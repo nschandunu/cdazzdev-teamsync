@@ -9,6 +9,11 @@ import { fetchMobileAPI } from '../utils/api';
 
 const CACHE_KEY_TASKS = '@tasks_cache';
 const CACHE_KEY_PROJECTS = '@projects_cache';
+const PRIORITY_ORDER: Record<string, number> = {
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
+};
 
 export default function TaskListScreen({ navigation, setToken }: any) {
   const [projects, setProjects] = useState<any[]>([]);
@@ -95,18 +100,34 @@ export default function TaskListScreen({ navigation, setToken }: any) {
     loadData(true);
   }, [activeProjectId]);
 
-  const renderTask = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.taskCard}
-      onPress={() => navigation.navigate('TaskDetail', { task: item })}
-    >
-      <View style={styles.taskHeader}>
-        <Text style={styles.priority}>{item.priority} PRIORITY</Text>
-        <Text style={styles.status}>{item.status.replace('_', ' ')}</Text>
-      </View>
-      <Text style={styles.taskTitle}>{item.title}</Text>
-    </TouchableOpacity>
-  );
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aPriority = String(a?.priority || 'LOW').toUpperCase();
+    const bPriority = String(b?.priority || 'LOW').toUpperCase();
+    return (PRIORITY_ORDER[aPriority] ?? 99) - (PRIORITY_ORDER[bPriority] ?? 99);
+  });
+
+  const renderTask = ({ item }: { item: any }) => {
+    const priority = String(item.priority || 'LOW').toUpperCase();
+    const priorityStyle =
+      priority === 'HIGH'
+        ? styles.priorityHigh
+        : priority === 'MEDIUM'
+          ? styles.priorityMedium
+          : styles.priorityLow;
+
+    return (
+      <TouchableOpacity
+        style={styles.taskCard}
+        onPress={() => navigation.navigate('TaskDetail', { task: item })}
+      >
+        <View style={styles.taskHeader}>
+          <Text style={[styles.priority, styles.priorityBadge, priorityStyle]}>{priority} PRIORITY</Text>
+          <Text style={styles.status}>{item.status.replace('_', ' ')}</Text>
+        </View>
+        <Text style={styles.taskTitle}>{item.title}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -151,7 +172,7 @@ export default function TaskListScreen({ navigation, setToken }: any) {
         <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={tasks}
+          data={sortedTasks}
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
@@ -181,6 +202,10 @@ const styles = StyleSheet.create({
   taskCard: { backgroundColor: '#fff', padding: 16, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
   taskHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   priority: { fontSize: 11, fontWeight: 'bold', color: '#6B7280' },
+  priorityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, overflow: 'hidden' },
+  priorityHigh: { backgroundColor: '#FEE2E2', color: '#B91C1C' },
+  priorityMedium: { backgroundColor: '#FEF3C7', color: '#B45309' },
+  priorityLow: { backgroundColor: '#DCFCE7', color: '#166534' },
   status: { fontSize: 11, fontWeight: 'bold', color: '#2563EB' },
   taskTitle: { fontSize: 16, fontWeight: '500', color: '#111827' },
   emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 40 }
