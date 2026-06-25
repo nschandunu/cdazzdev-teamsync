@@ -53,6 +53,12 @@ export default function TaskListScreen({ navigation, setToken }: Props) {
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(fetchedTasks));
       }
     } catch (error) {
+      if (error instanceof Error && error.message.toLowerCase().includes('unauthorized')) {
+        await SecureStore.deleteItemAsync('access_token');
+        setToken(null);
+        return;
+      }
+
       console.error(error);
       // Fallback to cache if API fails even while "online"
       setIsOffline(true);

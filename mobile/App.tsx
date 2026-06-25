@@ -8,6 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import LoginScreen from './src/screens/LoginScreen';
 import TaskListScreen from './src/screens/TaskListScreen';
 import TaskDetailScreen from './src/screens/TaskDetailScreen';
+import { fetchMobileAPI } from './src/utils/api';
 
 // Notifications are disabled in Expo Go for this workaround.
 
@@ -43,7 +44,24 @@ export default function App() {
     const bootstrapAsync = async () => {
       try {
         const token = await SecureStore.getItemAsync('access_token');
-        setUserToken(token);
+        if (!token) {
+          setUserToken(null);
+          return;
+        }
+
+        try {
+          // Validate persisted token before entering protected screens.
+          await fetchMobileAPI('/projects');
+          setUserToken(token);
+        } catch (error: any) {
+          if (String(error?.message || '').toLowerCase().includes('unauthorized')) {
+            await SecureStore.deleteItemAsync('access_token');
+            setUserToken(null);
+          } else {
+            // Keep existing behavior for transient failures (offline/server down).
+            setUserToken(token);
+          }
+        }
       } catch (e) {
         console.error("Failed to restore token");
       } finally {
