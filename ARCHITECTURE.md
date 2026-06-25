@@ -144,23 +144,23 @@ erDiagram
     }
 ```
 
-### Indexing Strategy at 1M+ Rows
+### Indexing Strategy (At 1M+ Rows)
 
-When the `Task` table reaches 1M+ rows, queries will frequently filter by `projectId`, `status`, and `assigneeId`, while sorting by `dueDate`.
+When a database table scales to 1,000,000+ rows, relying on sequential table scans for complex queries becomes a severe performance bottleneck. For the Task table, where queries frequently filter by `projectId`, `status`, and `assigneeId`, and subsequently sort by `dueDate`, a carefully constructed composite B-tree index is absolutely essential.
 
-To keep those reads efficient and avoid full table scans, the schema uses a composite B-tree index. Database engines evaluate composite indexes from left to right, so the leftmost columns matter most.
+I would implement a composite index utilizing all four of these columns. Database query planners evaluate composite indexes based on the "leftmost prefix" rule, meaning column order is critical to ensuring the index is utilized properly.
 
-1. `projectId` comes first because it scopes the query to a specific project board.
-2. `status` and `assigneeId` follow because they act as secondary filters inside that project.
-3. `dueDate` is last so the database can return sorted results without an expensive in-memory sort.
+- `projectId` (Highly Restrictive): This must be the leading column in the index. Since users almost exclusively view tasks scoped to a single project board, filtering by `projectId` immediately eliminates the vast majority of the 1M+ rows from the scan.
+- `status` and `assigneeId` (Secondary Filters): Placing these next allows the database engine to further narrow down the remaining project-specific subset rapidly.
+- `dueDate` (The Sort Key): Placing the sorted column at the exact end of the composite index is a crucial optimization. Because the index perfectly matches the WHERE clauses, the database can use the index's inherent B-tree structure to return the filtered results already ordered. Without this, the database is forced to perform a costly in-memory sort (a filesort) on the filtered dataset, which severely degrades performance under heavy load.
 
-In `schema.prisma`, this is defined with:
+While adding indexes incurs a slight write penalty during INSERT or UPDATE operations, the massive read-speed improvements for dashboard rendering make this trade-off highly favorable.
+
+In `schema.prisma`, the annotation would be applied directly to the Task model:
 
 ```prisma
 @@index([projectId, status, assigneeId, dueDate])
 ```
-
-_Note: foreign keys such as `assigneeId` and `projectId` also receive individual secondary indexes to help JOIN operations and cascade deletes._
 
 ## Part E: Cloud Architecture
 
