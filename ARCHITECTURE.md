@@ -1,129 +1,261 @@
-Cloud Architecture (Part E)
+# TeamSync Architecture & Technical Spec
 
-Architecture Overview
+This document summarizes the architecture, database design, security model, and deployment strategy for TeamSync. It covers Parts D and E of the CDAZZDEV engineering assessment.
 
-The solution follows a modular three-tier architecture:
+## 1. System Overview
 
-┌──────────────────────────┐
-│      Client Layer        │
-├──────────────────────────┤
-│ Next.js Web Application  │
-│ Expo React Native App    │
-└─────────────┬────────────┘
-              │ HTTPS
-              ▼
-┌──────────────────────────┐
-│      API Layer           │
-├──────────────────────────┤
-│ NestJS Backend           │
-│ JWT Authentication       │
-│ RBAC Authorization       │
-│ Swagger Documentation    │
-└─────────────┬────────────┘
-              │ Prisma ORM
-              ▼
-┌──────────────────────────┐
-│      Data Layer          │
-├──────────────────────────┤
-│ PostgreSQL Database      │
-└──────────────────────────┘
+TeamSync uses a modular three-tier architecture designed for clarity, maintainability, and future growth.
 
-⸻
+```mermaid
+flowchart TB
+    subgraph C[Client Layer]
+        W[Web: Next.js App Router]
+        M[Mobile: React Native Expo]
+    end
 
-Technology Choices
+    subgraph A[API Layer]
+        N[NestJS Backend]
+        J[JWT Authentication]
+        R[RBAC Authorization]
+        V[Validation: class-validator]
+        S[Swagger Documentation]
+    end
 
-Backend
+    subgraph D[Data Layer]
+        P[PostgreSQL Database]
+    end
 
-* NestJS
-* TypeScript
-* Prisma ORM
-* JWT Authentication
-* Role Based Access Control
+    W --> N
+    M --> N
+    N --> J
+    N --> R
+    N --> V
+    N --> S
+    N --> P
+```
 
-Database
+## 2. Technology Choices
 
-* PostgreSQL
+### Backend
 
-Web Client
+- NestJS
+- TypeScript
+- Prisma ORM
+- JWT authentication
+- Role-based access control
 
-* Next.js
-* React
-* TypeScript
+### Database
 
-Mobile Client
+- PostgreSQL
 
-* Expo
-* React Native
+### Web Client
 
-Containerization
+- Next.js
+- React
+- TypeScript
 
-* Docker
-* Docker Compose
+### Mobile Client
 
-⸻
+- Expo
+- React Native
 
-Authentication Flow
+### Containerization
 
-1. User submits credentials.
-2. Backend validates credentials.
-3. Password hash is verified.
-4. JWT access token is issued.
-5. Client stores token securely.
-6. Protected endpoints validate token.
+- Docker
+- Docker Compose
+
+## 3. Authentication Flow
+
+1. The user submits credentials.
+2. The backend validates the request.
+3. The password hash is verified.
+4. A JWT access token is issued.
+5. The client stores the token securely.
+6. Protected endpoints validate the token.
 7. RBAC guards enforce permissions.
 
-⸻
+## 4. Security Measures
 
-Security Measures
+### Password Security
 
-Password Security
+- Passwords are hashed using bcrypt.
+- Plain-text passwords are never stored.
 
-* Passwords hashed using bcrypt.
-* Plain text passwords never stored.
+### Authentication
 
-Authentication
+- JWT access tokens are used for session state.
+- Route guards protect private endpoints.
 
-* JWT access tokens.
-* Route guards protect endpoints.
+### Authorization
 
-Authorization
+- Global roles.
+- Project-level roles.
+- RBAC enforced at the API layer.
 
-* Global roles.
-* Project-level roles.
-* RBAC enforced at API level.
+### Validation
 
-Validation
+- DTO validation.
+- Request sanitization.
+- Strong typing through TypeScript.
 
-* DTO validation.
-* Request sanitization.
-* Strong typing through TypeScript.
+## Part D: Database Design
 
-⸻
+The schema is normalized to support strict RBAC both globally and within each project.
 
-Scalability Considerations
+### Entity Relationship Diagram (ERD)
 
-The architecture is intentionally simple while supporting future scaling.
+```mermaid
+erDiagram
+    User ||--o{ ProjectMember : has
+    User ||--o{ Task : assigned
+    User ||--o{ Comment : authors
+    Project ||--o{ ProjectMember : includes
+    Project ||--o{ Task : contains
+    Task ||--o{ Comment : has
 
-Possible enhancements:
+    User {
+        String id
+        String email
+        String role
+    }
+    Project {
+        String id
+        String name
+        String ownerId
+    }
+    ProjectMember {
+        String userId
+        String projectId
+        String role
+    }
+    Task {
+        String id
+        String projectId
+        String status
+        String priority
+        String assigneeId
+        DateTime dueDate
+    }
+    Comment {
+        String id
+        String taskId
+        String authorId
+        String body
+    }
+```
 
-* Redis caching
-* Background job processing
-* Horizontal API scaling
-* Read replicas
-* Object storage for attachments
+### Indexing Strategy at 1M+ Rows
 
-⸻
+When the `Task` table reaches 1M+ rows, queries will frequently filter by `projectId`, `status`, and `assigneeId`, while sorting by `dueDate`.
 
-Deployment Strategy
+To keep those reads efficient and avoid full table scans, the schema uses a composite B-tree index. Database engines evaluate composite indexes from left to right, so the leftmost columns matter most.
 
-Development
+1. `projectId` comes first because it scopes the query to a specific project board.
+2. `status` and `assigneeId` follow because they act as secondary filters inside that project.
+3. `dueDate` is last so the database can return sorted results without an expensive in-memory sort.
 
+In `schema.prisma`, this is defined with:
+
+```prisma
+@@index([projectId, status, assigneeId, dueDate])
+```
+
+_Note: foreign keys such as `assigneeId` and `projectId` also receive individual secondary indexes to help JOIN operations and cascade deletes._
+
+## Part E: Cloud Architecture
+
+TeamSync runs locally with Docker Compose for the assessment, but the production strategy is AWS-based.
+
+### 1. Component Infrastructure
+
+- **Backend API (NestJS):** Deployed to Amazon ECS using AWS Fargate. This removes the need to manage EC2 instances while allowing horizontal scaling based on CPU and memory thresholds.
+- **Database (PostgreSQL):** Hosted on Amazon Aurora Serverless v2 (PostgreSQL-compatible). Aurora scales capacity up and down automatically, which fits a B2B workload with predictable peaks and quieter off-hours.
+- **Web Client (Next.js):** Deployed with AWS Amplify Hosting. It supports Next.js App Router, Server Actions, SSR, and CloudFront-backed CDN delivery.
+- **Mobile Client (React Native):** Built and distributed using Expo Application Services (EAS) for CI/CD to iOS TestFlight and Google Play internal testing.
+
+### 2. Secrets Management
+
+Production secrets such as `DATABASE_URL` and `JWT_SECRET` must never live in source code or CI logs. They would be stored in AWS Secrets Manager and injected into the ECS task definition at runtime as environment variables.
+
+### 3. CI/CD Pipeline Sketch
+
+Continuous integration and deployment are handled through GitHub Actions:
+
+1. **Test stage on pull requests:** Runs `npm run lint`, Jest unit tests, and Prisma schema formatting checks.
+2. **Build stage on merge to main:** Builds the Next.js production app, builds the NestJS Docker image, and pushes it to Amazon ECR.
+3. **Deploy stage:** Triggers an ECS rolling update for the API and an AWS Amplify webhook for the web app.
+
+### 4. Scaling Concerns and Mitigation
+
+**Bottleneck:** As teams grow, requests to `/projects/:id/tasks` become increasingly read-heavy and may overload the primary Aurora writer.
+
+**Mitigation:**
+
+1. Add Amazon ElastiCache (Redis) in front of the NestJS API to cache project boards with short TTLs.
+2. Provision Aurora read replicas and route read-only Prisma queries to the replica endpoints so the primary database stays focused on writes.
+
+## 5. Key Engineering and Security Decisions
+
+### Web Authentication
+
+Instead of storing JWTs in `localStorage`, the Next.js client uses Server Actions to set `httpOnly`, `Secure` cookies. Middleware then protects routes based on cookie presence.
+
+### Mobile Authentication
+
+React Native cannot use `httpOnly` cookies, so tokens are stored with `expo-secure-store`. This encrypts the JWT and stores it in the iOS Keychain and Android Keystore. Plain `AsyncStorage` is not used for authentication credentials.
+
+### Mobile Offline-First Architecture
+
+The React Native app uses `@react-native-async-storage/async-storage` as a local cache. Network connectivity is monitored, and when the device goes offline the app falls back to cached data and shows a visible offline banner.
+
+### Optimistic UI Updates
+
+Task comments use an optimistic UI flow. New comments appear immediately with a temporary ID before the API response arrives. If the server returns an error, the UI rolls back the state and alerts the user.
+
+### Expo Go Limitation
+
+Push notification registration is included in `mobile/App.tsx`, but it is wrapped in a safe `try/catch` for Expo Go compatibility. Since Expo Go does not support remote push notification registration in this assessment setup, the app remains stable in local Expo Go while still supporting standalone or custom development builds.
+
+## 6. Design Decisions
+
+### Why NestJS?
+
+- Modular architecture
+- Built-in dependency injection
+- Strong TypeScript support
+- Enterprise-ready patterns
+
+### Why PostgreSQL?
+
+- ACID compliance
+- Strong relational modeling
+- Excellent Prisma support
+
+### Why Docker?
+
+- Consistent environments
+- Easy onboarding
+- Reproducible deployments
+
+### Why RBAC?
+
+- Fine-grained permissions
+- Clear separation of responsibilities
+- Supports future growth of teams and projects
+
+## 7. Deployment Strategy
+
+### Development
+
+```text
 Docker Compose
- ├─ PostgreSQL
- └─ NestJS API
+├─ PostgreSQL
+└─ NestJS API
+```
 
-Production
+### Production
 
+```text
 Load Balancer
       │
       ▼
@@ -131,43 +263,6 @@ NestJS Containers
       │
       ▼
 PostgreSQL Database
+```
 
-This approach provides a clear migration path from local development to production infrastructure without major architectural changes.
-
-⸻
-
-Design Decisions
-
-Why NestJS?
-
-* Modular architecture
-* Built-in dependency injection
-* Strong TypeScript support
-* Enterprise-ready patterns
-
-Why PostgreSQL?
-
-* ACID compliance
-* Strong relational modeling
-* Excellent Prisma support
-
-Why Docker?
-
-* Consistent environments
-* Easy onboarding
-* Reproducible deployments
-
-Why RBAC?
-
-* Fine-grained permissions
-* Clear separation of responsibilities
-* Supports future growth of teams and projects
-
-
-
-
-# Architecture Notes
-
-## Expo Go limitation
-
-Push notification registration is commented out in `App.tsx` for the Expo Go assessment workaround. The client can run without a push-delivery backend, but notification registration should be restored when building a standalone app or a custom dev client.
+This approach provides a clear path from local development to production infrastructure without major architectural changes.
