@@ -11,6 +11,16 @@ import TaskDetailScreen from './src/screens/TaskDetailScreen';
 import { fetchMobileAPI } from './src/utils/api';
 
 // Notifications are disabled in Expo Go for this workaround.
+//
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: false,
+//     shouldSetBadge: false,
+//     shouldShowBanner: true,
+//     shouldShowList: true,
+//   }),
+// });
 
 type RootStackParamList = {
   Login: undefined;
@@ -71,55 +81,45 @@ export default function App() {
     bootstrapAsync();
   }, []);
 
-  // REQUIREMENT: Request Push Notification Permissions
-  /*
-  useEffect(() => {
-    if (userToken) {
-      registerForPushNotificationsAsync();
-    }
-  }, [userToken]);
+  // useEffect(() => {
+  //   if (userToken) {
+  //     registerForPushNotificationsAsync();
+  //   }
+  // }, [userToken]);
 
-  async function registerForPushNotificationsAsync() {
-    let token;
+  // async function registerForPushNotificationsAsync() {
+  //   if (Platform.OS === 'android') {
+  //     await Notifications.setNotificationChannelAsync('default', {
+  //       name: 'default',
+  //       importance: Notifications.AndroidImportance.MAX,
+  //       vibrationPattern: [0, 250, 250, 250],
+  //       lightColor: '#FF231F7C',
+  //     });
+  //   }
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
+  //   const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  //   let finalStatus = existingStatus;
 
-    // Check existing permissions
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+  //   if (existingStatus !== 'granted') {
+  //     const { status } = await Notifications.requestPermissionsAsync();
+  //     finalStatus = status;
+  //   }
 
-    // If we don't have permission, ask for it
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
+  //   if (finalStatus !== 'granted') {
+  //     console.log('Push notification permission not granted');
+  //     return;
+  //   }
 
-    // If they denied it, just return
-    if (finalStatus !== 'granted') {
-      console.log('Push notification permission not granted');
-      return;
-    }
+  //   try {
+  //     const pushTokenString = (await Notifications.getExpoPushTokenAsync({
+  //       projectId: 'your-project-id',
+  //     })).data;
 
-    try {
-      // Capture the device push token
-      const pushTokenString = (await Notifications.getExpoPushTokenAsync({
-        projectId: "YOUR_EXPO_PROJECT_ID", // Not strictly required for local emulator testing
-      })).data;
-
-      console.log("Device Push Token:", pushTokenString);
-      // In a real app, you would send this token to your NestJS backend here.
-    } catch (e: any) {
-      console.log("Error getting push token:", e.message);
-    }
-  }
-  */
+  //     console.log('Device Push Token:', pushTokenString);
+  //   } catch (e: any) {
+  //     console.log('Expo Go Limitation Caught: Cannot fetch remote token without a Dev Build.');
+  //   }
+  // }
 
   if (isLoading) {
     return (
