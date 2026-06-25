@@ -87,11 +87,11 @@ export default async function DashboardPage({
 
         {/* --- MODAL RENDERING --- */}
         {activeTaskDetails && currentProjectId && (
-          <TaskModal task={activeTaskDetails} projectId={currentProjectId} />
+          <TaskModal task={activeTaskDetails} projectId={currentProjectId} members={activeProject?.members || []} />
         )}
         
         {isCreatingTask && currentProjectId && (
-          <CreateTaskModal projectId={currentProjectId} />
+          <CreateTaskModal projectId={currentProjectId} members={activeProject?.members || []} />
         )}
 
         {isCreatingProject && userRole === 'MANAGER' && (

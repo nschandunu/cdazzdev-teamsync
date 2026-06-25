@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { updateTaskStatus, addCommentAction } from '@/app/actions/tasks';
+import { updateTaskAction, addCommentAction } from '@/app/actions/tasks';
 
-export default function TaskModal({ task, projectId }: { task: any, projectId: string }) {
+export default function TaskModal({ task, projectId, members = [] }: { task: any, projectId: string, members?: any[] }) {
   // Bind the taskId to our server actions
-  const updateStatus = updateTaskStatus.bind(null, task.id);
+  const updateTask = updateTaskAction.bind(null, task.id);
   const addComment = addCommentAction.bind(null, task.id);
 
   return (
@@ -38,18 +38,38 @@ export default function TaskModal({ task, projectId }: { task: any, projectId: s
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-100">
             <div>
               <p className="text-caption text-neutral-500 mb-1">Assignee</p>
-              <p className="text-body font-medium">{task.assignee?.name || 'Unassigned'}</p>
+              <form action={updateTask}>
+                <select 
+                  name="assigneeId" 
+                  defaultValue={task.assignee?.id || ''}
+                  onChange={(e) => e.target.form?.requestSubmit()}
+                  className="w-full px-3 py-2 rounded-input border border-neutral-300 text-body focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Unassigned</option>
+                  {members.map(member => (
+                    <option key={member.user.id} value={member.user.id}>{member.user.name}</option>
+                  ))}
+                </select>
+              </form>
             </div>
             <div>
               <p className="text-caption text-neutral-500 mb-1">Due Date</p>
-              <p className="text-body font-medium">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'None'}</p>
+              <form action={updateTask}>
+                <input 
+                  type="date" 
+                  name="dueDate" 
+                  defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}
+                  onChange={(e) => e.target.form?.requestSubmit()}
+                  className="w-full px-3 py-2 rounded-input border border-neutral-300 text-body focus:ring-primary focus:border-primary"
+                />
+              </form>
             </div>
           </div>
 
           {/* Status Control */}
           <div className="pt-4 border-t border-neutral-100">
             <p className="text-caption text-neutral-500 mb-2">Status</p>
-            <form action={updateStatus}>
+            <form action={updateTask}>
               <select 
                 name="status" 
                 defaultValue={task.status}

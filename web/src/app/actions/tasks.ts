@@ -3,13 +3,22 @@
 import { fetchServerAPI } from '@/app/lib/api-server';
 import { revalidatePath } from 'next/cache';
 
-export async function updateTaskStatus(taskId: string, formData: FormData) {
+export async function updateTaskAction(taskId: string, formData: FormData) {
   const status = formData.get('status') as string;
+  const priority = formData.get('priority') as string;
+  const assigneeId = formData.get('assigneeId') as string;
+  const dueDate = formData.get('dueDate') as string;
   
+  const payload: any = {};
+  if (status) payload.status = status;
+  if (priority) payload.priority = priority;
+  if (assigneeId !== null) payload.assigneeId = assigneeId === '' ? null : assigneeId;
+  if (dueDate !== null) payload.dueDate = dueDate ? new Date(dueDate).toISOString() : null;
+
   try {
     await fetchServerAPI(`/tasks/${taskId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(payload),
     });
     // This tells Next.js to instantly refresh the server data on the dashboard
     revalidatePath('/dashboard');

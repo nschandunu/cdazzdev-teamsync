@@ -31,6 +31,7 @@ export class ProjectsService {
       },
       include: {
         owner: { select: { id: true, name: true, email: true } },
+        members: { include: { user: { select: { id: true, name: true, email: true } } } },
       }
     });
   }

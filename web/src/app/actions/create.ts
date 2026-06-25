@@ -26,13 +26,19 @@ export async function createProjectAction(formData: FormData) {
 export async function createTaskAction(projectId: string, formData: FormData) {
   const title = formData.get('title') as string;
   const priority = formData.get('priority') as string;
+  const assigneeId = formData.get('assigneeId') as string;
+  const dueDate = formData.get('dueDate') as string;
 
   if (!title) return;
+
+  const payload: any = { title, priority };
+  if (assigneeId) payload.assigneeId = assigneeId;
+  if (dueDate) payload.dueDate = new Date(dueDate).toISOString();
 
   try {
     await fetchServerAPI(`/projects/${projectId}/tasks`, {
       method: 'POST',
-      body: JSON.stringify({ title, priority }),
+      body: JSON.stringify(payload),
     });
     // Refresh the board and close the modal by routing back to the base project URL
     revalidatePath('/dashboard');

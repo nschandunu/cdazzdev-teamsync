@@ -44,7 +44,13 @@ export class TasksService {
       : { createdAt: 'desc' };
 
     const [data, total] = await Promise.all([
-      this.prisma.task.findMany({ where, skip, take: limit, orderBy }),
+      this.prisma.task.findMany({ 
+        where, 
+        skip, 
+        take: limit, 
+        orderBy,
+        include: { assignee: { select: { id: true, name: true } } }
+      }),
       this.prisma.task.count({ where }),
     ]);
 
@@ -94,7 +100,12 @@ export class TasksService {
       );
     }
 
-    return this.prisma.task.update({ where: { id }, data: dto });
+    const updateData: any = { ...dto };
+    if (dto.dueDate !== undefined) {
+      updateData.dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
+    }
+
+    return this.prisma.task.update({ where: { id }, data: updateData });
   }
 
   async addComment(taskId: string, dto: CreateCommentDto, userId: string) {

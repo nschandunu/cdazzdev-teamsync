@@ -41,22 +41,35 @@ export default function KanbanBoard({ tasks }: { tasks: any[] }) {
                   <span className={`text-[11px] font-bold px-2 py-1 uppercase tracking-wider rounded-input ${priorityColors[task.priority as keyof typeof priorityColors]}`}>
                     {task.priority}
                   </span>
-                  {/* Avatar Placeholder */}
-                  {task.assigneeId && (
-                    <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-caption font-bold" title="Assignee">
-                      A
-                    </div>
-                  )}
+                  {/* Assignee */}
+                  <div className="flex items-center gap-2">
+                    {task.assignee?.name ? (
+                      <>
+                        <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-[10px] font-bold uppercase" title={task.assignee.name}>
+                          {task.assignee.name.substring(0, 2)}
+                        </div>
+                        <span className="text-caption text-neutral-600 truncate max-w-[80px]" title={task.assignee.name}>
+                          {task.assignee.name}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-caption text-neutral-400 italic">Unassigned</span>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-body font-medium text-neutral-900 group-hover:text-primary transition-colors line-clamp-2">
                   {task.title}
                 </h3>
-                {task.dueDate && (
-                  <p className="text-caption text-neutral-500 mt-3 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    {new Date(task.dueDate).toLocaleDateString()}
+                
+                {/* Due Date */}
+                <div className="mt-3 flex items-center">
+                  <p className={`text-caption flex items-center gap-1 ${task.dueDate ? 'text-neutral-500' : 'text-neutral-400 italic'}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'No due date'}
                   </p>
-                )}
+                </div>
               </Link>
             ))}
             

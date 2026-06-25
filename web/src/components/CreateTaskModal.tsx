@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createTaskAction } from '@/app/actions/create';
 
-export default function CreateTaskModal({ projectId }: { projectId: string }) {
+export default function CreateTaskModal({ projectId, members = [] }: { projectId: string, members?: any[] }) {
   const createActionWithId = createTaskAction.bind(null, projectId);
 
   return (
@@ -28,6 +28,21 @@ export default function CreateTaskModal({ projectId }: { projectId: string }) {
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-caption text-neutral-700 font-medium mb-1">Assignee</label>
+            <select name="assigneeId" className="w-full px-4 py-2 rounded-input border border-neutral-300 text-body focus:ring-primary focus:border-primary">
+              <option value="">Unassigned</option>
+              {members.map((member) => (
+                <option key={member.user.id} value={member.user.id}>
+                  {member.user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-caption text-neutral-700 font-medium mb-1">Due Date</label>
+            <input type="date" name="dueDate" className="w-full px-4 py-2 rounded-input border border-neutral-300 text-body focus:ring-primary focus:border-primary" />
           </div>
           <button type="submit" className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 rounded-btn transition-colors mt-4">
             Create Task

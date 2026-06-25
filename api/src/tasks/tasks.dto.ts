@@ -40,6 +40,16 @@ export class UpdateTaskDto {
   @IsEnum(TaskPriority)
   @IsOptional()
   priority?: TaskPriority;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  assigneeId?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  dueDate?: string;
 }
 
 export class FilterTasksDto {

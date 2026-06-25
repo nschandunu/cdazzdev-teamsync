@@ -100,6 +100,18 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
           <Text style={styles.status}>{fullTask.status.replace('_', ' ')}</Text>
         </View>
         <Text style={styles.title}>{fullTask.title}</Text>
+        
+        <View style={styles.metaContainer}>
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>Assignee</Text>
+            <Text style={styles.metaValue}>{fullTask.assignee?.name || 'Unassigned'}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>Due Date</Text>
+            <Text style={styles.metaValue}>{fullTask.dueDate ? new Date(fullTask.dueDate).toLocaleDateString() : 'None'}</Text>
+          </View>
+        </View>
+
         <Text style={styles.description}>{fullTask.description || 'No description provided.'}</Text>
       </View>
 
@@ -149,7 +161,11 @@ const styles = StyleSheet.create({
   badges: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   priority: { fontSize: 11, fontWeight: 'bold', color: '#6B7280', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   status: { fontSize: 11, fontWeight: 'bold', color: '#2563EB', backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 8 },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
+  metaContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F3F4F6', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  metaItem: { flex: 1 },
+  metaLabel: { fontSize: 12, color: '#6B7280', marginBottom: 4 },
+  metaValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
   description: { fontSize: 15, color: '#4B5563', lineHeight: 22 },
   commentsSection: { flex: 1, padding: 20 },
   commentsTitle: { fontSize: 16, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
