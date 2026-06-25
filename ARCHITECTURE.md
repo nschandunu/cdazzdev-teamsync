@@ -243,6 +243,10 @@ Push notification registration is included in `mobile/App.tsx`, but it is wrappe
 - Clear separation of responsibilities
 - Supports future growth of teams and projects
 
+### Tooling & Ecosystem Navigation (The ESM Trap)
+
+During backend initialization, a strategic decision was made regarding Prisma ORM versioning. Prisma 7 recently transitioned to a completely Rust-free, ESM-only (ECMAScript Modules) architecture. Because the standard NestJS boilerplate utilizes CommonJS, forcing Prisma 7 into this setup introduces an endless loop of ERR_REQUIRE_ESM import errors. Furthermore, the vast majority of ecosystem context and debugging resources are built for Prisma 5/6. To prioritize predictable execution and battle-tested stability over bleeding-edge features during a tight deadline, a stable, CommonJS-compatible version of Prisma was selected.
+
 ## 7. Deployment Strategy
 
 ### Development

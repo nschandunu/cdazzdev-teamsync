@@ -2,7 +2,7 @@
 
 TeamSync is a lightweight project and task tracking platform designed for managers and team members. It consists of a NestJS backend API, a Next.js web dashboard, and an Expo React Native mobile companion app.
 
-**Video Walkthrough:** [Insert your YouTube or Loom link here](INSERT_YOUR_YOUTUBE/LOOM_LINK_HERE)
+**Video Walkthrough:** [Insert your YouTube or Loom link here](INSERT__YOUTUBE_LINK_HERE)
 
 ---
 
@@ -81,27 +81,26 @@ npx expo start -c
 
 ## Key Engineering Decisions
 
-### 1. JWT Storage Strategy
+### 1. Frontend Security & Auth (JWT Storage)
+For the web app, JWTs are never stored in `localStorage` because of XSS risk. Next.js Server Actions handle the login mutation, and the JWT is stored in a strictly `httpOnly`, `SameSite=Lax` cookie via `next/headers`. This explicitly prevents XSS attacks from reading the token via `document.cookie`, directly fulfilling the security requirement in the brief.
 
-For the web app, JWTs are never stored in `localStorage` because of XSS risk. Authentication is handled through Next.js Server Actions that set `httpOnly`, `Secure`, and `SameSite=Strict` cookies.
+For the mobile app, where `httpOnly` cookies are not available, authentication uses `expo-secure-store`. This encrypts the JWT and stores it in the native Android Keystore and iOS Keychain rather than plain `AsyncStorage`.
 
-For the mobile app, `httpOnly` cookies are not available, so authentication uses `expo-secure-store`. This encrypts the JWT and stores it in the native Android Keystore and iOS Keychain rather than plain `AsyncStorage`.
+### 2. Web Data Architecture & State Management
+Leveraged Next.js 15 Server Components for initial data loads, passing the access token securely via the Next.js `cookies()` API. This avoids a client-heavy data-fetching layer, keeping the bundle smaller and improving the initial load path.
 
-### 2. Data Fetching and State Management
-
-The Next.js app uses React Server Components and Server Actions instead of a client-heavy data-fetching layer. This keeps the bundle smaller and improves the initial load path.
-
-For client-side interactions such as optimistic task updates, the app uses React's `useTransition` and `useOptimistic` hooks.
+Adopted a URL-driven state architecture (e.g., `?projectId=xyz`) for the Dashboard to ensure the UI is linkable, natively handles browser history, and avoids complex client-side context providers. For client-side interactions such as optimistic task updates, the app uses React's `useTransition` and `useOptimistic` hooks.
 
 On mobile, a custom fetch wrapper and `@react-native-async-storage/async-storage` provide the offline-first cache. When `expo-network` detects an offline state, the app falls back to cached JSON data and shows an offline warning banner.
 
-### 3. Mobile Push Notifications Limitation
+### 3. Mobile Session Management
+Engineered a root-level Auth Guard and 401 Interceptor. When the app boots, or during any API fetch, if the backend returns a 401 Unauthorized, the interceptor elegantly catches the error, wipes the dead token from the secure Keystore, and kicks the user back to the Login screen to prevent unhandled promise crashes.
 
-Push notification registration is implemented in `mobile/App.tsx`, but Expo Go on SDK 53 does not support remote push token registration. The `getExpoPushTokenAsync()` call is wrapped in `try/catch` so the app remains stable in local Expo Go and still works in a custom EAS development build.
+### 4. Push Notifications
+The client-side registration flow was implemented using `expo-notifications`. Due to Expo SDK 53+ removing remote push support from the Expo Go app, a safe try/catch fallback was used so the app remains stable in local Expo Go and still works in a custom EAS development build. Full end-to-end testing of this flow requires an Expo Development Build, which is a documented Expo limitation and does not affect production builds.
 
-### 4. Design-to-Code Fidelity
-
-The web UI uses Tailwind CSS mapped to the provided design tokens for colors, typography, spacing, and radius. This keeps the Login, Dashboard, and Task Detail screens consistent without hardcoding arbitrary values in components.
+### 5. Design-to-Code Fidelity
+Leveraged the newly released Tailwind CSS v4 to manage design tokens natively via CSS variables and the `@theme` directive. This ensured strict, pixel-perfect compliance with the provided Figma spec without needing bulky, external configuration files. The web UI uses these design tokens for colors, typography, spacing, and radius to keep the Login, Dashboard, and Task Detail screens consistent without hardcoding arbitrary values in components.
 
 ---
 
